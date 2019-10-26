@@ -69,14 +69,7 @@ db.once('open', function() {
                 textFile.readText();
                 if(cmd == `${prefix}spotify` || cmd == `${prefix}s`) {
                     message.reply('Searching for an account').then(messageLoad =>{
-                        Account.prototype.getAccount().then(response => {
-                            try {
-                                messageLoad.edit('Account sent, check your DM');
-                                message.author.send(response);
-                            } catch(e) {
-                                message.channel.send("Activate DM to get this account");
-                            }
-                        })
+                        Account.prototype.getAccount(message,messageLoad);
                     })
                 }
             }

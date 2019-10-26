@@ -179,7 +179,7 @@ Account.prototype.getAcc = function (sp_dc) {
                         fecharenovacion = "External";
                     }
                     var respuesta = {
-                        type: tipo,
+                        subscription: tipo,
                         country: pais,
                         renovationdate: fecharenovacion
                     };
@@ -207,7 +207,7 @@ var buildAccEmbed = function(details) {
     return embed;
 }
 
-Account.prototype.getAccount = async function () {
+Account.prototype.getAccount = async function (message,messageLoad) {
     var account = await Account.prototype.getAccountRandom();
     var email = account.email;
     var password = account.password;
@@ -220,11 +220,18 @@ Account.prototype.getAccount = async function () {
         var accountDetails = await Account.prototype.getAcc(sp_dc);
         accountDetails.email = email;
         accountDetails.password = password;
-        if (accountDetails.type == "Free Spotify") {
-            await Account.prototype.updateStatus(email, false);
-            Account.prototype.getAccount();
+        // if (accountDetails.subscription == "Free Spotify") {
+        //     await Account.prototype.updateStatus(email, false);
+        //     Account.prototype.getAccount();
+        // }
+        Account.prototype.updateAccount(accountDetails);
+        var response = buildAccEmbed(accountDetails)
+        try {
+            messageLoad.edit('Account sent, check your DM');
+            message.author.send(response);
+        } catch(e) {
+            message.channel.send("Activate DM to get this account");
         }
-        return buildAccEmbed(accountDetails);
     }
 };
 
@@ -237,15 +244,50 @@ Account.prototype.checkAccount = async function (cb) {
         await Account.prototype.updateStatus(email, false);
         cb('Bad');
     } else {
+        Account.prototype.updateStatus(email, true);
         var accountDetails = await Account.prototype.getAcc(sp_dc);
         accountDetails.email = email;
         accountDetails.password = password;
-        if (accountDetails.type == "Free Spotify") {
+        if (accountDetails.subscription == "Free Spotify") {
             await Account.prototype.updateStatus(email, false);
         }
         cb(accountDetails);
     }
 };
+
+Account.prototype.updateAccount = async function (account) {
+    console.log("ACCOUNT TO UPDATE::", account);
+    if(!account.renovationDate) {
+        account.renovationDate = "External";
+    }
+    return new Promise(resolve => {
+        var query = {
+                email: account.email
+            },
+            update = {
+                password: account.password,
+                country: account.country,
+                subscription: account.subscription,
+                renovationDate: account.renovationDate,
+                status: true
+            },
+            options = {};
+
+        AccountModel.findOneAndUpdate(query, update, options, function (
+            error,
+            result
+        ) {
+            console.log("QUERY::", query);
+            console.log("UPDATE::", update);
+            console.log("RESULT::", result);
+            if (error) {
+                resolve("Fail");
+            } else if (result) {
+                resolve("Success");
+            }
+        });
+    });
+}
 
 Account.prototype.insertAccount = async function () {
     return new Promise(resolve => {

@@ -12,6 +12,7 @@ var setStatus = async function() {
 }
 
 OnReady.prototype.startBot = function() {
+    console.log("TRYING TO START BOT");
     self.bot.on("ready",async() => {
         console.log('Starting Bot');
         setStatus();
